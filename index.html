@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GESEG · Tablero de Control del Hurto · Colombia 2025</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,800;1,400;1,800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+:root{--bg:#F4F4F4;--surface:#FFFFFF;--card:#FFFFFF;--card2:#F7F8FA;--navy:#002855;--cobalt:#0057A8;--gold:#C8A84B;--gold2:#9C7A2E;--gold-bg:rgba(200,168,75,.13);--gold-brd:rgba(200,168,75,.38);--stl-bg:rgba(0,87,168,.07);--stl-brd:rgba(0,87,168,.22);--teal:#0E9F6E;--teal-bg:rgba(14,159,110,.09);--teal-brd:rgba(14,159,110,.25);--orange:#E07A28;--orange-d:#B85C00;--orange-bg:rgba(224,122,40,.09);--orange-brd:rgba(224,122,40,.30);--accent:#D6534A;--acc2:#C0392B;--acc-bg:rgba(214,83,74,.08);--acc-brd:rgba(214,83,74,.28);--border:rgba(0,40,85,.11);--brd2:rgba(0,40,85,.06);--ink:#1C2B3A;--ink2:#3D5568;--ink3:#5A6878;--r:10px;--r2:16px;--sh:0 4px 24px rgba(0,40,85,.07);--sh2:0 2px 12px rgba(0,40,85,.05);--font-d:'Fraunces',Georgia,serif;--font-b:'Space Grotesk',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{font-family:var(--font-b);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.7}
+.stripe{height:3px;background:linear-gradient(90deg,var(--cobalt),var(--gold),var(--teal),var(--accent),var(--cobalt));background-size:400% 100%;animation:sA 6s linear infinite;position:fixed;top:0;left:0;right:0;z-index:1001}@keyframes sA{0%{background-position:0%}100%{background-position:400%}}
+.topbar{background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:3px;z-index:1000}
+.tb-brand{display:flex;align-items:center;gap:14px}.tb-logo{background:#fff;border-radius:7px;padding:6px 14px;box-shadow:0 1px 6px rgba(0,0,0,.12)}.tb-logo-inner{display:flex;flex-direction:column;align-items:center;line-height:1.2}.tb-logo-name{font-weight:800;font-size:1.2em;color:var(--navy);letter-spacing:.05em}.tb-logo-sub{font-size:.55em;font-weight:600;color:var(--cobalt)}
+.tb-name{font-weight:700;color:var(--navy);font-size:.85em;line-height:1.3}.tb-name span{display:block;font-weight:400;font-size:.78em;color:var(--ink2)}
+.nav-links{display:flex;gap:3px;flex-wrap:wrap}.nav-links a{color:var(--ink2);text-decoration:none;font-size:.68em;padding:5px 9px;border-radius:6px;font-weight:500;white-space:nowrap}.nav-links a:hover{background:var(--stl-bg);color:var(--cobalt)}
+.hero{position:relative;background:var(--navy);padding:52px 24px 44px;overflow:hidden;text-align:center;color:#fff}.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:32px 32px}.hero-glow{position:absolute;width:500px;height:500px;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(100px);opacity:.2;pointer-events:none;background:var(--cobalt)}
+.hero-inner{position:relative;max-width:1100px;margin:0 auto}.hero h1{font-family:var(--font-d);font-size:clamp(1.5em,3.5vw,2.4em);font-weight:800;margin-bottom:.3em;line-height:1.2}.hero h1 em{font-style:italic;color:var(--gold)}.hero p{font-size:.86em;opacity:.72;max-width:640px;margin:0 auto}
+.doc-badge{display:inline-block;font-size:.68em;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:3px 14px;border-radius:20px;margin-bottom:12px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:9px;margin-top:22px}.kpi-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--r2);padding:13px;text-align:center;backdrop-filter:blur(4px)}.kpi-value{font-family:var(--font-d);font-size:1.3em;font-weight:800;line-height:1;margin-bottom:2px}.kpi-label{font-size:.58em;opacity:.52;text-transform:uppercase;letter-spacing:1.2px;font-weight:600}
+.wrap{max-width:1200px;margin:0 auto;padding:20px 20px 60px}
+.sec-header{margin:44px 0 18px}.sec-num{font-size:.68em;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--cobalt);margin-bottom:3px}.sec-title{font-family:var(--font-d);font-size:1.35em;font-weight:800;color:var(--navy);padding-bottom:7px;border-bottom:2px solid var(--cobalt);margin-bottom:6px}.sec-lead{font-size:.84em;color:var(--ink2);max-width:700px}
+.sec-divider{border:none;border-top:1px solid var(--border);margin:44px 0 0}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(370px,1fr));gap:16px}.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:18px;box-shadow:var(--sh2)}
+.ct{font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:12px;padding:4px 10px;border-radius:6px;display:inline-block}
+.ct-r{background:var(--acc-bg);color:var(--accent)}.ct-g{background:var(--gold-bg);color:var(--gold2)}.ct-b{background:var(--stl-bg);color:var(--cobalt)}.ct-t{background:var(--teal-bg);color:var(--teal)}.ct-o{background:var(--orange-bg);color:var(--orange-d)}
+.cw{position:relative;width:100%;height:320px}.cw.tall{height:380px}
+.map-box{width:100%;height:500px;border-radius:var(--r2);overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh2)}
+.dtable{width:100%;border-collapse:collapse;font-size:.78em}.dtable th{text-align:left;padding:8px 9px;border-bottom:2px solid var(--border);color:var(--ink3);font-size:.68em;text-transform:uppercase;letter-spacing:.7px;font-weight:700;background:var(--card2)}.dtable td{padding:7px 9px;border-bottom:1px solid var(--brd2)}.dtable tr:hover td{background:rgba(0,87,168,.03)}
+.rk{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:5px;font-size:.68em;font-weight:700;background:var(--card2);color:var(--ink2)}.rk-1{background:var(--accent);color:#fff}.rk-2{background:var(--orange);color:#fff}.rk-3{background:var(--gold);color:#fff}
+.bar-bg{height:5px;background:var(--card2);border-radius:3px;overflow:hidden}.bar-fg{height:100%;border-radius:3px}
+.mkpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:14px;text-align:center;box-shadow:var(--sh2)}.mkpi-val{font-family:var(--font-d);font-size:1.3em;font-weight:800;line-height:1}.mkpi-lbl{font-size:.64em;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:3px}
+.finding{background:var(--card);border-left:3px solid var(--cobalt);border-radius:0 var(--r2) var(--r2) 0;padding:14px 16px;margin-bottom:10px;box-shadow:var(--sh2)}.finding-num{font-size:.62em;color:var(--cobalt);font-weight:700;letter-spacing:2px;margin-bottom:2px;text-transform:uppercase}.finding-text{font-size:.82em;line-height:1.7}.finding-impl{font-size:.74em;color:var(--gold2);margin-top:3px;font-style:italic}
+.alert-card{border-radius:var(--r2);padding:14px 16px;margin-bottom:10px}.alert-p1{background:var(--acc-bg);border:1px solid var(--acc-brd)}.alert-p2{background:var(--orange-bg);border:1px solid var(--orange-brd)}.alert-p3{background:var(--gold-bg);border:1px solid var(--gold-brd)}.alert-emerg{background:var(--stl-bg);border:1px solid var(--stl-brd)}.alert-title{font-size:.74em;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}.alert-body{font-size:.76em;line-height:1.6;color:var(--ink2)}
+.footer{background:var(--navy);color:rgba(255,255,255,.6);text-align:center;padding:18px;font-size:.7em;line-height:1.8}.footer b{color:rgba(255,255,255,.85)}
+.btn-print{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;border:none;padding:10px 18px;border-radius:var(--r);cursor:pointer;font-family:var(--font-b);font-weight:600;font-size:.82em;box-shadow:var(--sh);z-index:200}
+@media(max-width:768px){.topbar{padding:8px 12px}.nav-links{display:none}.kpi-grid{grid-template-columns:repeat(2,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}.wrap{padding:0 12px 40px}.hero{padding:40px 14px 32px}.map-box{height:340px}}
+@media print{.btn-print,.topbar,.stripe{display:none!important}.hero{padding:20px!important}}
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<div class="topbar"><div class="tb-brand"><div class="tb-logo"><div class="tb-logo-inner"><span class="tb-logo-name">GESEG</span><span class="tb-logo-sub">Gestión de la Seguridad S.A.S.</span></div></div><div style="width:1px;height:28px;background:rgba(0,40,85,.14)"></div><div class="tb-name">Tablero de Control Territorial<span>Hurto · Personas · Automotores · Motocicletas · Colombia 2025</span></div></div>
+<div class="nav-links"><a href="#panorama">Panorama</a><a href="#temporal">Temporal</a><a href="#territorial">Territorial</a><a href="#municipios">Municipios</a><a href="#mapa">Mapa</a><a href="#modalidades">Modalidades</a><a href="#hallazgos">Hallazgos</a><a href="#decisiones">Decisiones</a></div></div>
+
+<div class="hero"><div class="hero-grid"></div><div class="hero-glow"></div><div class="hero-inner">
+<div class="doc-badge">Centro de Inteligencia Territorial · SIEDCO · Policía Nacional · Julio 2026</div>
+<h1>Tablero de Control Territorial<br>del <em>Hurto</em> en Colombia</h1>
+<p>Análisis integrado de Hurto a Personas, Automotores y Motocicletas · 333,390 casos en 2025 · YTD 2026 con reducción en las tres modalidades.</p>
+<div class="kpi-grid" id="cover-kpis"></div>
+<div style="margin-top:14px;font-size:.62em;opacity:.4;letter-spacing:1px">SIEDCO · POLICÍA NACIONAL · 2025–2026 · GESEG</div>
+</div></div>
+
+<div class="wrap">
+<!-- S1 PANORAMA -->
+<section id="panorama"><div class="sec-header"><div class="sec-num">Sección 01</div><div class="sec-title">Panorama Nacional del Hurto</div><div class="sec-lead">333,390 hurtos en 2025: 289,368 a personas (86.8%), 34,625 a motocicletas (10.4%) y 9,397 a automotores (2.8%). YTD 2026 muestra reducción generalizada.</div></div>
+<div class="grid-3" id="panorama-kpis" style="margin-bottom:16px"></div>
+<div class="grid-2">
+<div class="card"><div class="ct ct-b">Distribución por Tipo de Hurto · 2025</div><div class="cw"><canvas id="chart-dist"></canvas></div></div>
+<div class="card"><div class="ct ct-t">YTD 2026 vs 2025 · Variación por Tipo</div><div class="cw"><canvas id="chart-ytd"></canvas></div></div>
+</div></section>
+<hr class="sec-divider">
+
+<!-- S2 TEMPORAL -->
+<section id="temporal"><div class="sec-header"><div class="sec-num">Sección 02</div><div class="sec-title">Evolución Temporal</div></div>
+<div class="grid-2">
+<div class="card"><div class="ct ct-r">Tendencia Mensual · Hurto a Personas · 2025 vs 2026</div><div class="cw tall"><canvas id="chart-per-month"></canvas></div></div>
+<div class="card"><div class="ct ct-o">Tendencia Mensual · Automotores y Motos · 2025</div><div class="cw tall"><canvas id="chart-veh-month"></canvas></div></div>
+</div>
+<div class="grid-2" style="margin-top:16px">
+<div class="card"><div class="ct ct-b">Comportamiento por Día · Tres Modalidades</div><div class="cw tall"><canvas id="chart-weekly"></canvas></div></div>
+<div class="card"><div class="ct ct-g">Heatmap · Hurto a Personas · Mes × Día</div><div id="heatmap-box" style="overflow-x:auto"></div></div>
+</div></section>
+<hr class="sec-divider">
+
+<!-- S3 TERRITORIAL -->
+<section id="territorial"><div class="sec-header"><div class="sec-num">Sección 03</div><div class="sec-title">Concentración Departamental</div><div class="sec-lead">Bogotá concentra el 42.5% del hurto a personas nacional (123,005 casos). La distribución territorial varía significativamente entre las tres modalidades.</div></div>
+<div class="card"><div class="ct ct-r">Departamentos · Trilogía del Hurto</div><div style="overflow-x:auto"><table class="dtable" id="dep-table"></table></div></div>
+<div class="grid-2" style="margin-top:16px">
+<div class="card"><div class="ct ct-b">Top 10 Departamentos · Personas</div><div class="cw tall"><canvas id="chart-dep-per"></canvas></div></div>
+<div class="card"><div class="ct ct-o">Top 10 Departamentos · Vehículos + Motos</div><div class="cw tall"><canvas id="chart-dep-veh"></canvas></div></div>
+</div></section>
+<hr class="sec-divider">
+
+<!-- S4 MUNICIPIOS -->
+<section id="municipios"><div class="sec-header"><div class="sec-num">Sección 04</div><div class="sec-title">Municipios Críticos</div></div>
+<div class="card"><div class="ct ct-r">Top 20 Municipios · Hurto Integrado</div><div style="overflow-x:auto"><table class="dtable" id="mun-table"></table></div></div></section>
+<hr class="sec-divider">
+
+<!-- S5 MAPA -->
+<section id="mapa"><div class="sec-header"><div class="sec-num">Sección 05</div><div class="sec-title">Mapa de Concentración Territorial</div></div>
+<div class="map-box" id="map-hurto" style="height:520px"></div></section>
+<hr class="sec-divider">
+
+<!-- S6 MODALIDADES -->
+<section id="modalidades"><div class="sec-header"><div class="sec-num">Sección 06</div><div class="sec-title">Modalidades, Medios y Vehículos</div></div>
+<div class="grid-2">
+<div class="card"><div class="ct ct-r">Medio Utilizado · Hurto a Personas</div><div class="cw tall"><canvas id="chart-armas"></canvas></div></div>
+<div class="card"><div class="ct ct-o">Tipo de Vehículo Hurtado · Automotores</div><div class="cw tall"><canvas id="chart-clase-aut"></canvas></div></div>
+</div>
+<div class="grid-2" style="margin-top:16px">
+<div class="card"><div class="ct ct-b">Lugar de Ocurrencia · Personas</div><div class="cw tall"><canvas id="chart-lugares"></canvas></div></div>
+<div class="card"><div class="ct ct-t">Zona · Urbana vs Rural</div><div class="cw"><canvas id="chart-zona"></canvas></div></div>
+</div></section>
+<hr class="sec-divider">
+
+<!-- S7 HALLAZGOS -->
+<section id="hallazgos"><div class="sec-header"><div class="sec-num">Sección 07</div><div class="sec-title">Hallazgos Estratégicos</div></div><div id="findings-box"></div></section>
+<hr class="sec-divider">
+
+<!-- S8 DECISIONES -->
+<section id="decisiones"><div class="sec-header"><div class="sec-num">Sección 08</div><div class="sec-title">Centro de Decisiones</div></div><div class="grid-2" id="decision-center"></div></section>
+</div>
+
+<div class="footer"><div><b>GESEG · Gestión de la Seguridad S.A.S.</b></div><div>Tablero de Control del Hurto · Personas · Automotores · Motocicletas · Colombia 2025</div><div>Fuente: SIEDCO · Policía Nacional · Actualización Julio 2026 · CONFIDENCIAL</div></div>
+<button class="btn-print" onclick="window.print()">🖨️</button>
+
+<script>
+const D={"kpis": {"per_25": 289368, "aut_25": 9397, "mot_25": 34625, "total_25": 333390, "per_diario": 792.8, "aut_diario": 25.7, "mot_diario": 94.9, "ytd_per": -9.2, "ytd_aut": -10.9, "ytd_mot": -12.1}, "monthly": {"per": [23860, 23605, 25277, 24795, 23220, 23443, 25475, 25226, 25132, 28590, 20682, 20063], "aut": [774, 752, 741, 842, 767, 765, 762, 844, 805, 872, 831, 642], "mot": [3184, 2804, 3143, 2940, 2802, 2761, 3155, 2904, 2908, 3055, 2761, 2208], "per_26": [26187, 23105, 22439, 20121, 20940, 18187, 2799, 0, 0, 0, 0, 0], "aut_26": [803, 779, 765, 693, 592, 501, 70, 0, 0, 0, 0, 0], "mot_26": [3135, 2792, 2589, 2402, 2479, 2111, 188, 0, 0, 0, 0, 0]}, "weekly": {"per": [37263, 39666, 42290, 40925, 45709, 47233, 36282], "aut": [1072, 1206, 1355, 1435, 1378, 1567, 1384], "mot": [4776, 4787, 4999, 4852, 4998, 5101, 5112]}, "days_labels": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"], "months_labels": ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"], "dept_combined": [{"name": "BOGOTA", "per": 123005, "aut": 3316, "mot": 4800, "total": 131121}, {"name": "ANTIOQUIA", "per": 35113, "aut": 1477, "mot": 7597, "total": 44187}, {"name": "VALLE", "per": 24060, "aut": 1724, "mot": 5111, "total": 30895}, {"name": "CUNDINAMARCA", "per": 16540, "aut": 337, "mot": 793, "total": 17670}, {"name": "ATLÁNTICO", "per": 14123, "aut": 538, "mot": 1834, "total": 16495}, {"name": "SANTANDER", "per": 9087, "aut": 69, "mot": 1238, "total": 10394}, {"name": "NARIÑO", "per": 8687, "aut": 286, "mot": 1185, "total": 10158}, {"name": "HUILA", "per": 6461, "aut": 85, "mot": 1910, "total": 8456}, {"name": "CAUCA", "per": 5333, "aut": 536, "mot": 2332, "total": 8201}, {"name": "BOLÍVAR", "per": 7046, "aut": 88, "mot": 667, "total": 7801}, {"name": "META", "per": 6123, "aut": 95, "mot": 1202, "total": 7420}, {"name": "TOLIMA", "per": 6286, "aut": 41, "mot": 561, "total": 6888}, {"name": "CESAR", "per": 3907, "aut": 219, "mot": 946, "total": 5072}, {"name": "NORTE DE SANTANDER", "per": 3127, "aut": 149, "mot": 1078, "total": 4354}, {"name": "MAGDALENA", "per": 3414, "aut": 32, "mot": 365, "total": 3811}], "dept_per": [{"name": "BOGOTA", "casos": 123005, "pct": 42.51}, {"name": "ANTIOQUIA", "casos": 35113, "pct": 12.13}, {"name": "VALLE", "casos": 24060, "pct": 8.31}, {"name": "CUNDINAMARCA", "casos": 16540, "pct": 5.72}, {"name": "ATLÁNTICO", "casos": 14123, "pct": 4.88}, {"name": "SANTANDER", "casos": 9087, "pct": 3.14}, {"name": "NARIÑO", "casos": 8687, "pct": 3.0}, {"name": "BOLÍVAR", "casos": 7046, "pct": 2.43}, {"name": "HUILA", "casos": 6461, "pct": 2.23}, {"name": "TOLIMA", "casos": 6286, "pct": 2.17}, {"name": "META", "casos": 6123, "pct": 2.12}, {"name": "CAUCA", "casos": 5333, "pct": 1.84}, {"name": "CESAR", "casos": 3907, "pct": 1.35}, {"name": "MAGDALENA", "casos": 3414, "pct": 1.18}, {"name": "BOYACÁ", "casos": 3308, "pct": 1.14}], "dept_aut": [{"name": "BOGOTA", "casos": 3316, "pct": 35.29}, {"name": "VALLE", "casos": 1724, "pct": 18.35}, {"name": "ANTIOQUIA", "casos": 1477, "pct": 15.72}, {"name": "ATLÁNTICO", "casos": 538, "pct": 5.73}, {"name": "CAUCA", "casos": 536, "pct": 5.7}, {"name": "CUNDINAMARCA", "casos": 337, "pct": 3.59}, {"name": "NARIÑO", "casos": 286, "pct": 3.04}, {"name": "CESAR", "casos": 219, "pct": 2.33}, {"name": "NORTE DE SANTANDER", "casos": 149, "pct": 1.59}, {"name": "GUAJIRA", "casos": 141, "pct": 1.5}, {"name": "META", "casos": 95, "pct": 1.01}, {"name": "BOLÍVAR", "casos": 88, "pct": 0.94}, {"name": "HUILA", "casos": 85, "pct": 0.9}, {"name": "SANTANDER", "casos": 69, "pct": 0.73}, {"name": "RISARALDA", "casos": 69, "pct": 0.73}], "dept_mot": [{"name": "ANTIOQUIA", "casos": 7597, "pct": 21.94}, {"name": "VALLE", "casos": 5111, "pct": 14.76}, {"name": "BOGOTA", "casos": 4800, "pct": 13.86}, {"name": "CAUCA", "casos": 2332, "pct": 6.74}, {"name": "HUILA", "casos": 1910, "pct": 5.52}, {"name": "ATLÁNTICO", "casos": 1834, "pct": 5.3}, {"name": "SANTANDER", "casos": 1238, "pct": 3.58}, {"name": "META", "casos": 1202, "pct": 3.47}, {"name": "NARIÑO", "casos": 1185, "pct": 3.42}, {"name": "NORTE DE SANTANDER", "casos": 1078, "pct": 3.11}, {"name": "CESAR", "casos": 946, "pct": 2.73}, {"name": "CUNDINAMARCA", "casos": 793, "pct": 2.29}, {"name": "BOLÍVAR", "casos": 667, "pct": 1.93}, {"name": "TOLIMA", "casos": 561, "pct": 1.62}, {"name": "GUAJIRA", "casos": 474, "pct": 1.37}], "mun_combined": [{"name": "BOGOTÁ D.C.", "dept": "BOGOTA", "per": 123005, "aut": 3316, "mot": 4800, "total": 131121}, {"name": "MEDELLÍN", "dept": "ANTIOQUIA", "per": 24923, "aut": 926, "mot": 5074, "total": 30923}, {"name": "CALI", "dept": "VALLE", "per": 17985, "aut": 1415, "mot": 3560, "total": 22960}, {"name": "BARRANQUILLA", "dept": "ATLÁNTICO", "per": 10187, "aut": 415, "mot": 1118, "total": 11720}, {"name": "PASTO", "dept": "NARIÑO", "per": 6498, "aut": 64, "mot": 418, "total": 6980}, {"name": "CARTAGENA", "dept": "BOLÍVAR", "per": 6084, "aut": 58, "mot": 425, "total": 6567}, {"name": "BUCARAMANGA", "dept": "SANTANDER", "per": 5383, "aut": 10, "mot": 598, "total": 5991}, {"name": "VILLAVICENCIO", "dept": "META", "per": 4941, "aut": 34, "mot": 888, "total": 5863}, {"name": "SOACHA", "dept": "CUNDINAMARCA", "per": 5359, "aut": 150, "mot": 261, "total": 5770}, {"name": "POPAYÁN", "dept": "CAUCA", "per": 3888, "aut": 204, "mot": 1098, "total": 5190}, {"name": "NEIVA", "dept": "HUILA", "per": 4476, "aut": 16, "mot": 374, "total": 4866}, {"name": "IBAGUÉ", "dept": "TOLIMA", "per": 4462, "aut": 21, "mot": 275, "total": 4758}, {"name": "VALLEDUPAR", "dept": "CESAR", "per": 2834, "aut": 74, "mot": 452, "total": 3360}, {"name": "SOLEDAD", "dept": "ATLÁNTICO", "per": 2645, "aut": 65, "mot": 443, "total": 3153}, {"name": "BELLO", "dept": "ANTIOQUIA", "per": 2124, "aut": 165, "mot": 660, "total": 2949}, {"name": "SANTA MARTA", "dept": "MAGDALENA", "per": 2720, "aut": 18, "mot": 191, "total": 2929}, {"name": "CÚCUTA", "dept": "NORTE DE SANTANDER", "per": 2183, "aut": 65, "mot": 647, "total": 2895}, {"name": "PEREIRA", "dept": "RISARALDA", "per": 2265, "aut": 36, "mot": 100, "total": 2401}, {"name": "PALMIRA", "dept": "VALLE", "per": 1671, "aut": 57, "mot": 351, "total": 2079}, {"name": "IPIALES", "dept": "NARIÑO", "per": 1254, "aut": 119, "mot": 304, "total": 1677}, {"name": "ITAGUI", "dept": "ANTIOQUIA", "per": 1351, "aut": 62, "mot": 212, "total": 1625}, {"name": "YOPAL", "dept": "CASANARE", "per": 1317, "aut": 7, "mot": 293, "total": 1617}, {"name": "MONTERÍA", "dept": "CÓRDOBA", "per": 1421, "aut": 8, "mot": 149, "total": 1578}, {"name": "CHÍA", "dept": "CUNDINAMARCA", "per": 1499, "aut": 28, "mot": 23, "total": 1550}, {"name": "ENVIGADO", "dept": "ANTIOQUIA", "per": 1328, "aut": 45, "mot": 78, "total": 1451}, {"name": "PITALITO", "dept": "HUILA", "per": 731, "aut": 11, "mot": 528, "total": 1270}, {"name": "TUNJA", "dept": "BOYACÁ", "per": 1178, "aut": 11, "mot": 11, "total": 1200}, {"name": "FLORIDABLANCA", "dept": "SANTANDER", "per": 1039, "aut": 5, "mot": 140, "total": 1184}, {"name": "ARMENIA", "dept": "ANTIOQUIA", "per": 960, "aut": 12, "mot": 105, "total": 1077}, {"name": "GIRARDOT", "dept": "CUNDINAMARCA", "per": 857, "aut": 6, "mot": 58, "total": 921}], "mun_geo": [{"name": "BOGOTÁ D.C.", "dept": "BOGOTA", "per": 123005, "aut": 3316, "mot": 4800, "total": 131121, "lat": 4.711, "lon": -74.072}, {"name": "MEDELLÍN", "dept": "ANTIOQUIA", "per": 24923, "aut": 926, "mot": 5074, "total": 30923, "lat": 6.244, "lon": -75.574}, {"name": "CALI", "dept": "VALLE", "per": 17985, "aut": 1415, "mot": 3560, "total": 22960, "lat": 3.452, "lon": -76.532}, {"name": "BARRANQUILLA", "dept": "ATLÁNTICO", "per": 10187, "aut": 415, "mot": 1118, "total": 11720, "lat": 10.969, "lon": -74.781}, {"name": "PASTO", "dept": "NARIÑO", "per": 6498, "aut": 64, "mot": 418, "total": 6980, "lat": 1.214, "lon": -77.281}, {"name": "CARTAGENA", "dept": "BOLÍVAR", "per": 6084, "aut": 58, "mot": 425, "total": 6567, "lat": 10.391, "lon": -75.514}, {"name": "BUCARAMANGA", "dept": "SANTANDER", "per": 5383, "aut": 10, "mot": 598, "total": 5991, "lat": 7.119, "lon": -73.122}, {"name": "VILLAVICENCIO", "dept": "META", "per": 4941, "aut": 34, "mot": 888, "total": 5863, "lat": 4.142, "lon": -73.627}, {"name": "SOACHA", "dept": "CUNDINAMARCA", "per": 5359, "aut": 150, "mot": 261, "total": 5770, "lat": 4.586, "lon": -74.216}, {"name": "POPAYÁN", "dept": "CAUCA", "per": 3888, "aut": 204, "mot": 1098, "total": 5190, "lat": 2.442, "lon": -76.606}, {"name": "NEIVA", "dept": "HUILA", "per": 4476, "aut": 16, "mot": 374, "total": 4866, "lat": 2.927, "lon": -75.282}, {"name": "IBAGUÉ", "dept": "TOLIMA", "per": 4462, "aut": 21, "mot": 275, "total": 4758, "lat": 4.439, "lon": -75.232}, {"name": "VALLEDUPAR", "dept": "CESAR", "per": 2834, "aut": 74, "mot": 452, "total": 3360, "lat": 10.474, "lon": -73.25}, {"name": "SOLEDAD", "dept": "ATLÁNTICO", "per": 2645, "aut": 65, "mot": 443, "total": 3153, "lat": 10.918, "lon": -74.764}, {"name": "BELLO", "dept": "ANTIOQUIA", "per": 2124, "aut": 165, "mot": 660, "total": 2949, "lat": 6.338, "lon": -75.559}, {"name": "SANTA MARTA", "dept": "MAGDALENA", "per": 2720, "aut": 18, "mot": 191, "total": 2929, "lat": 11.24, "lon": -74.199}, {"name": "CÚCUTA", "dept": "NORTE DE SANTANDER", "per": 2183, "aut": 65, "mot": 647, "total": 2895, "lat": 7.889, "lon": -72.497}, {"name": "PEREIRA", "dept": "RISARALDA", "per": 2265, "aut": 36, "mot": 100, "total": 2401, "lat": 4.809, "lon": -75.694}, {"name": "PALMIRA", "dept": "VALLE", "per": 1671, "aut": 57, "mot": 351, "total": 2079, "lat": 3.54, "lon": -76.303}, {"name": "MONTERÍA", "dept": "CÓRDOBA", "per": 1421, "aut": 8, "mot": 149, "total": 1578, "lat": 8.748, "lon": -75.881}, {"name": "ENVIGADO", "dept": "ANTIOQUIA", "per": 1328, "aut": 45, "mot": 78, "total": 1451, "lat": 6.174, "lon": -75.59}], "armas_per": {"SIN EMPLEO DE ARMAS": {"total": 184703, "pct": 63.8}, "ARMA DE FUEGO": {"total": 43003, "pct": 14.9}, "ARMA BLANCA / CORTOPUNZANTE": {"total": 42782, "pct": 14.8}, "CONTUNDENTES": {"total": 8510, "pct": 2.9}, "ESCOPOLAMINA": {"total": 1762, "pct": 0.6}}, "armas_aut": {"SIN EMPLEO DE ARMAS": {"total": 3803, "pct": 40.5}, "LLAVE MAESTRA": {"total": 2929, "pct": 31.2}, "ARMA DE FUEGO": {"total": 2425, "pct": 25.8}, "ARMA BLANCA / CORTOPUNZANTE": {"total": 129, "pct": 1.4}, "ESCOPOLAMINA": {"total": 47, "pct": 0.5}}, "clase_aut": {"AUTOMOVIL": 5011, "CAMIONETA": 3005, "CAMPERO": 464, "CAMION": 332, "BUS": 231, "VEHICULO-PANEL": 121}, "clase_mot": {"MOTOCICLETA": 34572, "MOTO-CARRO": 47, "CUATRIMOTO": 4, "AUTOMOVIL": 1}, "zona_per": {"URBANA": 279401, "RURAL": 9967}, "zona_aut": {"URBANA": 8418, "RURAL": 979}, "lugares": {"VIAS PUBLICAS": 169359, "CALLEJÓN": 11915, "CARRETERA": 6263, "CENTRO COMERCIAL": 4095, "ALIMENTADOR BUS TRANSMILENIO": 4073, "BUS TRANSMILENIO": 3583, "ALMACENES": 2883, "PARQUES": 2718}, "heatmap": [{"m": 0, "d": 0, "v": 2854}, {"m": 0, "d": 1, "v": 3003}, {"m": 0, "d": 2, "v": 4007}, {"m": 0, "d": 3, "v": 3798}, {"m": 0, "d": 4, "v": 4070}, {"m": 0, "d": 5, "v": 3494}, {"m": 0, "d": 6, "v": 2634}, {"m": 1, "d": 0, "v": 3157}, {"m": 1, "d": 1, "v": 3241}, {"m": 1, "d": 2, "v": 3389}, {"m": 1, "d": 3, "v": 3481}, {"m": 1, "d": 4, "v": 3927}, {"m": 1, "d": 5, "v": 3688}, {"m": 1, "d": 6, "v": 2722}, {"m": 2, "d": 0, "v": 3465}, {"m": 2, "d": 1, "v": 3088}, {"m": 2, "d": 2, "v": 3282}, {"m": 2, "d": 3, "v": 3322}, {"m": 2, "d": 4, "v": 3648}, {"m": 2, "d": 5, "v": 4909}, {"m": 2, "d": 6, "v": 3563}, {"m": 3, "d": 0, "v": 3277}, {"m": 3, "d": 1, "v": 4265}, {"m": 3, "d": 2, "v": 4440}, {"m": 3, "d": 3, "v": 3141}, {"m": 3, "d": 4, "v": 3304}, {"m": 3, "d": 5, "v": 3630}, {"m": 3, "d": 6, "v": 2738}, {"m": 4, "d": 0, "v": 2778}, {"m": 4, "d": 1, "v": 2947}, {"m": 4, "d": 2, "v": 2906}, {"m": 4, "d": 3, "v": 3818}, {"m": 4, "d": 4, "v": 4133}, {"m": 4, "d": 5, "v": 4099}, {"m": 4, "d": 6, "v": 2539}, {"m": 5, "d": 0, "v": 3246}, {"m": 5, "d": 1, "v": 2804}, {"m": 5, "d": 2, "v": 3054}, {"m": 5, "d": 3, "v": 3168}, {"m": 5, "d": 4, "v": 3448}, {"m": 5, "d": 5, "v": 3815}, {"m": 5, "d": 6, "v": 3908}, {"m": 6, "d": 0, "v": 3032}, {"m": 6, "d": 1, "v": 3978}, {"m": 6, "d": 2, "v": 4026}, {"m": 6, "d": 3, "v": 4163}, {"m": 6, "d": 4, "v": 3650}, {"m": 6, "d": 5, "v": 3675}, {"m": 6, "d": 6, "v": 2951}, {"m": 7, "d": 0, "v": 2815}, {"m": 7, "d": 1, "v": 3079}, {"m": 7, "d": 2, "v": 3232}, {"m": 7, "d": 3, "v": 3020}, {"m": 7, "d": 4, "v": 4722}, {"m": 7, "d": 5, "v": 4680}, {"m": 7, "d": 6, "v": 3678}, {"m": 8, "d": 0, "v": 3972}, {"m": 8, "d": 1, "v": 3940}, {"m": 8, "d": 2, "v": 3300}, {"m": 8, "d": 3, "v": 3292}, {"m": 8, "d": 4, "v": 3808}, {"m": 8, "d": 5, "v": 3824}, {"m": 8, "d": 6, "v": 2996}, {"m": 9, "d": 0, "v": 3160}, {"m": 9, "d": 1, "v": 3510}, {"m": 9, "d": 2, "v": 4796}, {"m": 9, "d": 3, "v": 4556}, {"m": 9, "d": 4, "v": 5215}, {"m": 9, "d": 5, "v": 4137}, {"m": 9, "d": 6, "v": 3216}, {"m": 10, "d": 0, "v": 2322}, {"m": 10, "d": 1, "v": 2699}, {"m": 10, "d": 2, "v": 2717}, {"m": 10, "d": 3, "v": 2653}, {"m": 10, "d": 4, "v": 2935}, {"m": 10, "d": 5, "v": 4270}, {"m": 10, "d": 6, "v": 3086}, {"m": 11, "d": 0, "v": 3185}, {"m": 11, "d": 1, "v": 3112}, {"m": 11, "d": 2, "v": 3141}, {"m": 11, "d": 3, "v": 2513}, {"m": 11, "d": 4, "v": 2849}, {"m": 11, "d": 5, "v": 3012}, {"m": 11, "d": 6, "v": 2251}]};
+const C={navy:'#002855',cobalt:'#0057A8',gold:'#C8A84B',teal:'#0E9F6E',orange:'#E07A28',accent:'#D6534A',ink2:'#3D5568',gridC:'rgba(0,40,85,.06)'};
+function fmt(n){return n!=null?n.toLocaleString('es-CO'):'—'}
+let ch={};function mc(id,cfg){if(ch[id])ch[id].destroy();ch[id]=new Chart(document.getElementById(id).getContext('2d'),cfg)}
+const sF={responsive:true,maintainAspectRatio:false};const sL={color:C.ink2,font:{size:10,family:'Space Grotesk'}};
+
+// COVER KPIs
+(function(){const k=D.kpis;[
+{v:fmt(k.total_25),l:'Total Hurtos 2025',c:'#fff'},{v:fmt(k.per_25),l:'A Personas',c:C.accent},
+{v:fmt(k.mot_25),l:'A Motos',c:C.orange},{v:fmt(k.aut_25),l:'A Automotores',c:C.gold},
+{v:k.per_diario,l:'Personas/Día',c:'#fff'},{v:k.mot_diario,l:'Motos/Día',c:'#fff'},
+{v:k.ytd_per+'%',l:'YTD Personas',c:C.teal},{v:k.ytd_mot+'%',l:'YTD Motos',c:C.teal}
+].forEach(i=>{document.getElementById('cover-kpis').innerHTML+=`<div class="kpi-card"><div class="kpi-value" style="color:${i.c}">${i.v}</div><div class="kpi-label">${i.l}</div></div>`})})();
+
+// PANORAMA KPIs
+(function(){const k=D.kpis;[
+{v:fmt(k.per_25),l:'Personas',c:C.accent,s:k.ytd_per+'% YTD'},{v:fmt(k.aut_25),l:'Automotores',c:C.gold,s:k.ytd_aut+'% YTD'},{v:fmt(k.mot_25),l:'Motocicletas',c:C.orange,s:k.ytd_mot+'% YTD'}
+].forEach(i=>{document.getElementById('panorama-kpis').innerHTML+=`<div class="mkpi"><div class="mkpi-val" style="color:${i.c}">${i.v}</div><div class="mkpi-lbl">${i.l}</div><div style="font-size:.68em;color:var(--teal);font-weight:600;margin-top:3px">${i.s}</div></div>`})})();
+
+// DISTRIBUTION PIE
+mc('chart-dist',{type:'doughnut',data:{labels:['Personas','Motocicletas','Automotores'],datasets:[{data:[D.kpis.per_25,D.kpis.mot_25,D.kpis.aut_25],backgroundColor:[C.accent,C.orange,C.gold],borderWidth:2,borderColor:'#fff'}]},options:{...sF,plugins:{legend:{position:'right',labels:sL}}}});
+
+// YTD BAR
+mc('chart-ytd',{type:'bar',data:{labels:['Personas','Automotores','Motocicletas'],datasets:[{data:[D.kpis.ytd_per,D.kpis.ytd_aut,D.kpis.ytd_mot],backgroundColor:[C.teal,C.teal,C.teal],borderRadius:6}]},options:{...sF,plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.ink2},grid:{display:false}},y:{ticks:{color:'#5A6878',callback:v=>v+'%'},grid:{color:C.gridC}}}}});
+
+// MONTHLY PERSONAS
+mc('chart-per-month',{type:'line',data:{labels:D.months_labels.map(m=>m.substring(0,3)),datasets:[
+{label:'2025',data:D.monthly.per,borderColor:C.accent,backgroundColor:'rgba(214,83,74,.1)',tension:.3,fill:true,pointRadius:3,borderWidth:2},
+{label:'2026',data:D.monthly.per_26,borderColor:C.cobalt,tension:.3,fill:false,pointRadius:3,borderWidth:2,borderDash:[5,5]}
+]},options:{...sF,plugins:{legend:{position:'top',labels:sL}},scales:{x:{ticks:{color:'#5A6878'},grid:{color:C.gridC}},y:{ticks:{color:'#5A6878'},grid:{color:C.gridC}}}}});
+
+// MONTHLY VEHICLES
+mc('chart-veh-month',{type:'line',data:{labels:D.months_labels.map(m=>m.substring(0,3)),datasets:[
+{label:'Motos 2025',data:D.monthly.mot,borderColor:C.orange,tension:.3,pointRadius:3,borderWidth:2},
+{label:'Automotores 2025',data:D.monthly.aut,borderColor:C.gold,tension:.3,pointRadius:3,borderWidth:2}
+]},options:{...sF,plugins:{legend:{position:'top',labels:sL}},scales:{x:{ticks:{color:'#5A6878'},grid:{color:C.gridC}},y:{ticks:{color:'#5A6878'},grid:{color:C.gridC}}}}});
+
+// WEEKLY
+mc('chart-weekly',{type:'bar',data:{labels:D.days_labels,datasets:[
+{label:'Personas',data:D.weekly.per,backgroundColor:C.accent,borderRadius:3,barPercentage:.8},
+{label:'Motos',data:D.weekly.mot.map(v=>v*5),backgroundColor:C.orange,borderRadius:3,barPercentage:.8},
+{label:'Autos',data:D.weekly.aut.map(v=>v*15),backgroundColor:C.gold,borderRadius:3,barPercentage:.8}
+]},options:{...sF,plugins:{legend:{position:'top',labels:sL},tooltip:{callbacks:{label:ctx=>{const i=ctx.datasetIndex;const real=i===1?D.weekly.mot[ctx.dataIndex]:i===2?D.weekly.aut[ctx.dataIndex]:ctx.raw;return ctx.dataset.label+': '+fmt(real)}}}},scales:{x:{ticks:{color:C.ink2},grid:{display:false}},y:{ticks:{color:'#5A6878'},grid:{color:C.gridC}}}}});
+
+// HEATMAP
+(function(){const box=document.getElementById('heatmap-box');const ms=D.months_labels.map(m=>m.substring(0,3));const ds=D.days_labels.map(d=>d.substring(0,3));const vals=D.heatmap.map(h=>h.v);const mx=Math.max(...vals),mn=Math.min(...vals);
+let h='<table style="border-collapse:separate;border-spacing:3px;width:100%"><tr><td></td>';ds.forEach(d=>{h+=`<td style="padding:3px;font-size:.64em;color:var(--ink3);text-align:center;font-weight:600">${d}</td>`});h+='</tr>';
+for(let m=0;m<12;m++){h+=`<tr><td style="padding:3px 5px;font-size:.64em;color:var(--ink3);white-space:nowrap;font-weight:600">${ms[m]}</td>`;for(let d=0;d<7;d++){const it=D.heatmap.find(x=>x.m===m&&x.d===d);const v=it?it.v:0;const t=(v-mn)/(mx-mn||1);const r=Math.round(0*t+247*(1-t)),g=Math.round(87*t+248*(1-t)),b=Math.round(168*t+250*(1-t));h+=`<td style="padding:5px;text-align:center;font-size:.68em;font-weight:600;background:rgba(${r},${g},${b},${.12+t*.4});border-radius:5px;color:${t>.55?'#fff':'var(--ink2)'}">${fmt(v)}</td>`}h+='</tr>'}h+='</table>';box.innerHTML=h})();
+
+// DEP TABLE
+(function(){let h='<thead><tr><th>#</th><th>Departamento</th><th>Personas</th><th>Motos</th><th>Autos</th><th>Total</th><th>% Nal</th></tr></thead><tbody>';
+D.dept_combined.forEach((d,i)=>{h+=`<tr><td><span class="rk ${i<3?'rk-'+(i+1):''}">${i+1}</span></td><td style="font-weight:600">${d.name}</td><td style="color:var(--accent)">${fmt(d.per)}</td><td style="color:var(--orange)">${fmt(d.mot)}</td><td style="color:var(--gold2)">${fmt(d.aut)}</td><td style="font-weight:700">${fmt(d.total)}</td><td>${(d.total/D.kpis.total_25*100).toFixed(1)}%</td></tr>`});
+h+='</tbody>';document.getElementById('dep-table').innerHTML=h})();
+
+// DEP CHARTS
+mc('chart-dep-per',{type:'bar',data:{labels:D.dept_per.slice(0,10).map(d=>d.name.length>10?d.name.substring(0,8)+'…':d.name),datasets:[{data:D.dept_per.slice(0,10).map(d=>d.casos),backgroundColor:C.accent,borderRadius:4}]},options:{indexAxis:'y',...sF,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5A6878'},grid:{color:C.gridC}},y:{ticks:{color:C.ink2,font:{size:10}},grid:{display:false}}}}});
+
+mc('chart-dep-veh',{type:'bar',data:{labels:D.dept_aut.slice(0,10).map(d=>d.name.length>10?d.name.substring(0,8)+'…':d.name),datasets:[{label:'Autos',data:D.dept_aut.slice(0,10).map(d=>d.casos),backgroundColor:C.gold,borderRadius:3},{label:'Motos',data:D.dept_mot.slice(0,10).map(d=>d.casos),backgroundColor:C.orange,borderRadius:3}]},options:{...sF,plugins:{legend:{position:'top',labels:sL}},scales:{x:{ticks:{color:'#5A6878',font:{size:9},maxRotation:45},grid:{display:false}},y:{ticks:{color:'#5A6878'},grid:{color:C.gridC}}}}});
+
+// MUN TABLE
+(function(){let h='<thead><tr><th>#</th><th>Municipio</th><th>Depto</th><th>Personas</th><th>Motos</th><th>Autos</th><th>Total</th></tr></thead><tbody>';
+D.mun_combined.slice(0,20).forEach((m,i)=>{h+=`<tr><td><span class="rk ${i<3?'rk-'+(i+1):''}">${i+1}</span></td><td style="font-weight:600">${m.name}</td><td style="color:var(--ink2);font-size:.82em">${m.dept}</td><td style="color:var(--accent)">${fmt(m.per)}</td><td style="color:var(--orange)">${fmt(m.mot)}</td><td style="color:var(--gold2)">${fmt(m.aut)}</td><td style="font-weight:700">${fmt(m.total)}</td></tr>`});
+h+='</tbody>';document.getElementById('mun-table').innerHTML=h})();
+
+// MAP
+(function(){const map=L.map('map-hurto').setView([5,-74],5.5);L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© CARTO'}).addTo(map);
+D.mun_geo.forEach(m=>{const r=Math.max(6,Math.sqrt(m.total)*0.12);const c=m.total>50000?C.accent:m.total>10000?C.orange:m.total>3000?C.gold:C.teal;
+L.circleMarker([m.lat,m.lon],{radius:r,fillColor:c,color:c,fillOpacity:.5,weight:1}).addTo(map).bindPopup(`<div style="font-family:Space Grotesk;min-width:200px"><div style="font-weight:700;color:#002855">${m.name}</div><div style="font-size:11px;color:#5A6878">${m.dept}</div><hr style="border:none;border-top:1px solid #ddd;margin:4px 0"><div style="font-size:12px">Personas: <b style="color:${C.accent}">${fmt(m.per)}</b></div><div style="font-size:12px">Motos: <b style="color:${C.orange}">${fmt(m.mot)}</b></div><div style="font-size:12px">Autos: <b style="color:${C.gold}">${fmt(m.aut)}</b></div><div style="font-size:12px;font-weight:700;margin-top:3px">Total: ${fmt(m.total)}</div></div>`)})})();
+
+// ARMAS PERSONAS
+mc('chart-armas',{type:'doughnut',data:{labels:Object.keys(D.armas_per).map(k=>k.length>20?k.substring(0,18)+'…':k),datasets:[{data:Object.values(D.armas_per).map(v=>v.total),backgroundColor:[C.cobalt,C.accent,C.orange,C.gold,C.teal,'#8b5cf6'],borderWidth:2,borderColor:'#fff'}]},options:{...sF,plugins:{legend:{position:'right',labels:{...sL,padding:8}}}}});
+
+// CLASE AUTOMOTORES
+mc('chart-clase-aut',{type:'bar',data:{labels:Object.keys(D.clase_aut),datasets:[{data:Object.values(D.clase_aut),backgroundColor:[C.gold,C.orange,C.cobalt,C.teal,C.accent,'#94a3b8'],borderRadius:4}]},options:{indexAxis:'y',...sF,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5A6878'},grid:{color:C.gridC}},y:{ticks:{color:C.ink2,font:{size:10}},grid:{display:false}}}}});
+
+// LUGARES
+mc('chart-lugares',{type:'bar',data:{labels:Object.keys(D.lugares).slice(0,7).map(k=>k.length>16?k.substring(0,14)+'…':k),datasets:[{data:Object.values(D.lugares).slice(0,7),backgroundColor:C.cobalt,borderRadius:4}]},options:{indexAxis:'y',...sF,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5A6878'},grid:{color:C.gridC}},y:{ticks:{color:C.ink2,font:{size:9}},grid:{display:false}}}}});
+
+// ZONA
+mc('chart-zona',{type:'bar',data:{labels:['Personas','Automotores'],datasets:[{label:'Urbana',data:[D.zona_per.URBANA,D.zona_aut.URBANA],backgroundColor:C.cobalt,borderRadius:3},{label:'Rural',data:[D.zona_per.RURAL,D.zona_aut.RURAL],backgroundColor:C.teal,borderRadius:3}]},options:{...sF,plugins:{legend:{position:'top',labels:sL}},scales:{x:{ticks:{color:C.ink2},grid:{display:false}},y:{ticks:{color:'#5A6878'},grid:{color:C.gridC}}}}});
+
+// FINDINGS
+(function(){const F=[
+{t:'793 hurtos a personas por día',e:'289,368 hurtos a personas en 2025 = 792.8 casos diarios.',i:'Cada minuto se hurta a más de una persona en Colombia.',im:'El hurto a personas es el delito de mayor impacto en percepción de inseguridad ciudadana.'},
+{t:'Bogotá: 42.5% del hurto a personas',e:'123,005 casos en Bogotá = 42.5% del total nacional.',i:'Casi la mitad de los hurtos a personas ocurren en una sola ciudad.',im:'La estrategia anti-hurto debe ser Bogotá-céntrica con esfuerzos diferenciados para el resto.'},
+{t:'YTD 2026: reducción en las tres modalidades',e:'Personas -9.2%, Automotores -10.9%, Motocicletas -12.1%.',i:'Primera señal de reducción sostenida en los tres tipos de hurto simultáneamente.',im:'Las estrategias de 2025 parecen mostrar resultados — requieren sostenimiento.'},
+{t:'Sin armas: 63.8% del hurto a personas',e:'184,703 casos sin empleo de armas (63.8%). Arma fuego 14.9%, arma blanca 14.8%.',i:'La mayoría de hurtos son por oportunidad, no por amenaza armada.',im:'La prevención situacional (iluminación, cámaras, presencia) tiene mayor potencial que la represión armada.'},
+{t:'Viernes y sábado: pico de hurto',e:'Viernes (45,709) y sábado (47,233) concentran 32.1% del semanal.',i:'Correlación directa con mayor flujo peatonal y actividad económica de fin de semana.',im:'Reforzamiento operativo focalizado jueves-sábado en zonas comerciales.'},
+{t:'Automóvil: 53.3% del hurto vehicular',e:'5,011 automóviles (53.3%), 3,005 camionetas (32%). Juntos = 85%.',i:'El mercado criminal de autopartes se concentra en vehículos de alta demanda.',im:'Rastreo de desguazaderos y mercados ilegales de autopartes como estrategia complementaria.'},
+{t:'Medellín: segundo nodo pero distante',e:'24,923 hurtos a personas (8.6%) vs 123,005 de Bogotá.',i:'La brecha Bogotá-resto es abismal: Medellín tiene 5 veces menos.',im:'Bogotá requiere tratamiento excepcional, no comparable con ninguna otra ciudad.'},
+{t:'Escopolamina: 1,762 casos',e:'0.6% del total pero con gravedad extrema por sometimiento químico.',i:'La escopolamina como herramienta de hurto indica sofisticación y peligrosidad.',im:'Protocolos de atención específicos y campañas preventivas focalizadas.'},
+{t:'96.6% del hurto a personas es urbano',e:'279,401 casos urbanos vs 9,967 rurales.',i:'El hurto es esencialmente un delito de ciudad, de calle, de aglomeración.',im:'Las estrategias rurales anti-hurto son ineficientes comparadas con las urbanas.'},
+{t:'Motocicletas: 95 robos diarios',e:'34,625 motos hurtadas = 94.9 por día.',i:'Colombia pierde casi 100 motocicletas diarias por robo.',im:'Articulación con aseguradoras y sistemas de rastreo GPS como medida preventiva.'}
+];const el=document.getElementById('findings-box');F.forEach((f,i)=>{el.innerHTML+=`<div class="finding"><div class="finding-num">Hallazgo ${String(i+1).padStart(2,'0')} · ${f.t.toUpperCase()}</div><div class="finding-text"><b>Evidencia:</b> ${f.e}</div><div class="finding-text" style="margin-top:2px"><b>Interpretación:</b> ${f.i}</div><div class="finding-impl">→ ${f.im}</div></div>`})})();
+
+// DECISIONS
+(function(){const S=[
+{cls:'alert-p1',title:'⚠ TERRITORIOS PRIORITARIOS',body:`<b>Bogotá</b> (123,005 · 42.5%) · <b>Medellín</b> (24,923) · <b>Cali</b> (17,985) · <b>Barranquilla</b> (10,187) · <b>Pasto</b> (6,498)<br><span style="font-size:.75em;color:var(--ink3)">5 municipios concentran el 63% del hurto a personas.</span>`},
+{cls:'alert-emerg',title:'🟢 SEÑAL POSITIVA · Reducción YTD 2026',body:`Las tres modalidades muestran reducción en el primer semestre 2026:<br>• Personas: <b>-9.2%</b> · Automotores: <b>-10.9%</b> · Motocicletas: <b>-12.1%</b><br><span style="font-size:.75em;color:var(--ink3)">Primera reducción sostenida en las tres modalidades. Requiere sostenimiento de estrategias.</span>`},
+{cls:'alert-p2',title:'🔶 PATRONES OPERACIONALES CLAVE',body:`• <b>63.8%</b> del hurto a personas es sin armas — oportunidad, no amenaza<br>• <b>Viernes y sábado</b> concentran 32% — reforzamiento fin de semana<br>• <b>Escopolamina</b>: 1,762 casos — protocolo de atención diferenciado<br>• <b>Automóvil + camioneta</b> = 85% del hurto vehicular — rastreo de desguazaderos`},
+{cls:'alert-p3',title:'📋 RECOMENDACIONES',body:`<b>1.</b> Estrategia Bogotá-céntrica: 42.5% del problema está en una sola ciudad.<br><b>2.</b> Prevención situacional (CPTED): iluminación, cámaras, presencia policial visible.<br><b>3.</b> Reforzamiento jueves-sábado en zonas comerciales de los 10 municipios críticos.<br><b>4.</b> Rastreo de mercados ilegales de autopartes y desguazaderos.<br><b>5.</b> Campañas anti-escopolamina focalizadas en zonas de ocio nocturno.<br><b>6.</b> Sostener las estrategias de 2025 que están produciendo la reducción de 2026.`}
+];const el=document.getElementById('decision-center');S.forEach(s=>{el.innerHTML+=`<div class="alert-card ${s.cls}"><div class="alert-title">${s.title}</div><div class="alert-body">${s.body}</div></div>`})})();
+
+document.querySelectorAll('.nav-links a').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(a.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth',block:'start'})})});
+</script>
+</body>
+</html>
